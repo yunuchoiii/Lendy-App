@@ -6,6 +6,11 @@ async function signInWithProvider(provider: 'kakao' | 'google' | 'apple') {
   try {
     console.log('[OAuth] start', provider);
 
+    if (!supabase) {
+      console.error('[OAuth] supabase 클라이언트가 초기화되지 않았습니다.');
+      return;
+    }
+
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {

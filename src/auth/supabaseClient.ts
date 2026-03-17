@@ -1,21 +1,23 @@
-import {createClient} from '@supabase/supabase-js';
+import {createClient, SupabaseClient} from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Config from 'react-native-config';
+import {SUPABASE_URL, SUPABASE_ANON_KEY} from '../config/supabase';
 
-const SUPABASE_URL = Config.SUPABASE_URL;
-const SUPABASE_ANON_KEY = Config.SUPABASE_ANON_KEY;
+let supabase: SupabaseClient | null = null;
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  // 런타임에 바로 문제를 드러내기 위해 예외 처리
-  throw new Error('Supabase 환경변수(SUPABASE_URL, SUPABASE_ANON_KEY)가 설정되지 않았습니다.');
+  console.warn(
+    '[Supabase] 환경변수(SUPABASE_URL, SUPABASE_ANON_KEY)가 설정되지 않았습니다.',
+  );
+} else {
+  supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: false,
+      storage: AsyncStorage,
+    },
+  });
 }
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: false,
-    storage: AsyncStorage,
-  },
-});
+export {supabase};
 

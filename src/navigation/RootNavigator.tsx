@@ -29,7 +29,7 @@ const parseHashParams = (url: string) => {
 };
 
 const handleAuthDeepLink = async (url: string) => {
-  if (!url) {
+  if (!url || !supabase) {
     return;
   }
 
@@ -62,6 +62,12 @@ export const RootNavigator: React.FC = () => {
 
   useEffect(() => {
     let isMounted = true;
+
+    if (!supabase) {
+      console.warn('[Supabase] 클라이언트가 초기화되지 않았습니다.');
+      setLoading(false);
+      return;
+    }
 
     supabase.auth.getSession().then(({data}) => {
       if (!isMounted) {
