@@ -16,9 +16,13 @@ async function signInWithProvider(provider: 'kakao' | 'google' | 'apple') {
       options: {
         redirectTo: 'lendy://auth/callback',
         skipBrowserRedirect: false,
-        queryParams: {
-          scope: 'profile_nickname profile_image',
-        },
+        ...(provider === 'kakao'
+          ? {
+              queryParams: {
+                scope: 'profile_nickname profile_image',
+              },
+            }
+          : {}),
       },
     });
 
