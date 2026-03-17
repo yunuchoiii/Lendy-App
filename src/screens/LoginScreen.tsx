@@ -1,44 +1,108 @@
-import React from 'react';
-import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
-import type {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {supabase} from '../auth/supabaseClient';
-
-type RootStackParamList = {
-  Login: undefined;
-  MainWebView: undefined;
-};
-
-type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
+import React, { useEffect } from 'react';
+import { Image, Linking, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { supabase } from '../auth/supabaseClient';
 
 async function signInWithProvider(provider: 'kakao' | 'google' | 'apple') {
-  // TODO: RN에서의 OAuth 리다이렉트(deep link) 세부 설정은 추후 추가
-  await supabase.auth.signInWithOAuth({
-    provider,
-    options: {
-      skipBrowserRedirect: false,
-    },
-  });
+  try {
+    console.log('[OAuth] start', provider);
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: 'lendy://auth/callback',
+        skipBrowserRedirect: false,
+        queryParams: {
+          scope: 'profile_nickname profile_image',
+        },
+      },
+    });
+
+    console.log('[OAuth] result', { provider, data, error });
+
+    if (error) {
+      console.error('[OAuth] error', error);
+      return;
+    }
+
+    if (data?.url) {
+      console.log('[OAuth] open url', data.url);
+      await Linking.openURL(data.url);
+    }
+  } catch (e) {
+    console.error('[OAuth] exception', e);
+  }
 }
 
-export const LoginScreen: React.FC<Props> = () => {
+export const LoginScreen: React.FC = () => {
+  const scheme = useColorScheme();
+  const isDark = scheme === 'dark';
+
+  useEffect(() => {
+    Linking.getInitialURL()
+      .then(url => {
+        console.log('[DeepLink/LoginScreen] getInitialURL', url);
+      })
+      .catch(e => {
+        console.log('[DeepLink/LoginScreen] getInitialURL error', e);
+      });
+
+    const sub = Linking.addEventListener('url', event => {
+      console.log('[DeepLink/LoginScreen] url event', event?.url);
+    });
+
+    return () => {
+      sub.remove?.();
+    };
+  }, []);
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Lendy 소셜 로그인</Text>
+    <View style={[styles.container, isDark && styles.containerDark]}>
+      <View style={styles.logoSection}>
+        <Image
+          source={require('../../public/logo/lendy-logo.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+        <Text style={styles.subtitle}>
+          우리 동네 단기 대여 서비스 : <Text style={styles.subtitleHighlight}>렌디</Text>
+        </Text>
+      </View>
       <View style={styles.buttonGroup}>
         <TouchableOpacity
           style={[styles.button, styles.kakao]}
           onPress={() => signInWithProvider('kakao')}>
-          <Text style={styles.buttonText}>카카오로 계속하기</Text>
+          <View style={styles.buttonInner}>
+            <Image
+              source={require('../../public/icons/kakao.png')}
+              style={styles.icon}
+              resizeMode="contain"
+            />
+            <Text style={styles.kakaoText}>카카오 로그인하기</Text>
+          </View>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.button, styles.google]}
           onPress={() => signInWithProvider('google')}>
-          <Text style={styles.buttonText}>Google로 계속하기</Text>
+          <View style={styles.buttonInner}>
+            <Image
+              source={require('../../public/icons/google.png')}
+              style={styles.icon}
+              resizeMode="contain"
+            />
+            <Text style={styles.googleText}>Google 로그인하기</Text>
+          </View>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.button, styles.apple]}
           onPress={() => signInWithProvider('apple')}>
-          <Text style={styles.buttonText}>Apple로 계속하기</Text>
+          <View style={styles.buttonInner}>
+            <Image
+              source={require('../../public/icons/apple.png')}
+              style={styles.icon}
+              resizeMode="contain"
+            />
+            <Text style={styles.appleText}>Apple 로그인하기</Text>
+          </View>
         </TouchableOpacity>
       </View>
     </View>
@@ -48,24 +112,46 @@ export const LoginScreen: React.FC<Props> = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#184968',
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+    justifyContent: 'space-between',
+  },
+  containerDark: {
+    backgroundColor: '#020617',
+  },
+  logoSection: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 24,
-    backgroundColor: '#ffffff',
   },
-  title: {
-    fontSize: 24,
+  logo: {
+    width: 207,
+    height: 97,
+    marginBottom: 24,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#E5E7EB',
+  },
+  subtitleHighlight: {
     fontWeight: '700',
-    marginBottom: 32,
   },
   buttonGroup: {
     width: '100%',
     gap: 12,
   },
   button: {
-    paddingVertical: 14,
-    borderRadius: 999,
+    height: 56,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  buttonInner: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    flex: 1,
   },
   kakao: {
     backgroundColor: '#FEE500',
@@ -75,12 +161,31 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E5E7EB',
   },
+  googleDark: {
+    backgroundColor: '#020617',
+    borderColor: '#1F2937',
+  },
   apple: {
     backgroundColor: '#000000',
   },
-  buttonText: {
+  icon: {
+    width: 20,
+    height: 20,
+  },
+  kakaoText: {
     fontSize: 16,
     fontWeight: '600',
+    color: '#191600',
+  },
+  googleText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  appleText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 });
 

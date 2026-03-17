@@ -1,4 +1,4 @@
-package com.lendyapp
+package com.seowon.lendyapp
 
 import android.app.Application
 import com.facebook.react.PackageList

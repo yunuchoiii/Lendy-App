@@ -1,4 +1,4 @@
-package com.lendyapp
+package com.seowon.lendyapp
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

@@ -1,7 +1,11 @@
+import { BottomTabBarButtonProps, createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import React from 'react';
-import {Text, View, StyleSheet} from 'react-native';
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import {MainWebViewScreen} from '../screens/MainWebViewScreen';
+import { Pressable, StyleSheet, useColorScheme, View } from 'react-native';
+import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Icon from 'react-native-vector-icons/Feather';
+import { MainWebViewScreen } from '../screens/MainWebViewScreen';
+import { colors } from '../theme/colors';
 
 export type MainTabParamList = {
   Home: undefined;
@@ -12,6 +16,28 @@ export type MainTabParamList = {
 };
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
+
+const hapticOptions = {
+  enableVibrateFallback: true,
+  ignoreAndroidSystemSettings: false,
+};
+
+const HapticTabBarButton: React.FC<BottomTabBarButtonProps> = ({
+  onPress,
+  children,
+  ...rest
+}) => {
+  const handlePress = (event: any) => {
+    ReactNativeHapticFeedback.trigger('soft', hapticOptions);
+    onPress?.(event);
+  };
+
+  return (
+    <Pressable onPress={handlePress} {...(rest as any)}>
+      {children}
+    </Pressable>
+  );
+};
 
 const HomeTabScreen = () => (
   <MainWebViewScreen initialUrl="https://lendy-webview.local/home" />
@@ -34,45 +60,75 @@ const MyLendyTabScreen = () => (
 );
 
 export const MainTabNavigator: React.FC = () => {
+  const scheme = useColorScheme();
+  const themeColors = scheme === 'dark' ? colors.dark : colors.light;
+  const insets = useSafeAreaInsets();
+
   return (
     <Tab.Navigator
-      screenOptions={({route}) => ({
+      screenOptions={({ route }) => ({
         headerShown: false,
         tabBarShowLabel: true,
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: [
+          {
+            backgroundColor: themeColors.background,
+            borderTopColor: themeColors.background,
+            height: insets.bottom + 68,
+            paddingTop: 5,
+            paddingBottom: insets.bottom,
+            paddingHorizontal: 10,
+            shadowColor: themeColors.text,
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: 0.2,
+            shadowRadius: 10,
+          },
+        ],
         tabBarLabelStyle: styles.tabLabel,
-        tabBarIcon: ({focused}) => {
+        tabBarActiveTintColor: themeColors.primary,
+        tabBarIcon: ({ focused }) => {
           if (route.name === 'Create') {
+            const isDark = scheme === 'dark';
+            const baseSecondary = isDark ? colors.dark.secondary : colors.light.secondary;
+
             return (
               <View style={styles.centerButtonWrapper}>
-                <View style={[styles.centerButton, focused && styles.centerButtonFocused]}>
-                  <Text style={styles.centerButtonText}>＋</Text>
+                <View
+                  style={[
+                    styles.centerButton,
+                    {
+                      backgroundColor: focused ? themeColors.secondaryLight : baseSecondary,
+                      shadowColor: baseSecondary,
+                    },
+                  ]}>
+                  <Icon name="plus" size={32} color={'white'} />
                 </View>
               </View>
             );
           }
 
-          let label = '';
+          let iconName: string = 'circle';
           switch (route.name) {
             case 'Home':
-              label = '홈';
+              iconName = 'home';
               break;
             case 'Search':
-              label = '검색';
+              iconName = 'search';
               break;
             case 'Chat':
-              label = '대화';
+              iconName = 'message-circle';
               break;
             case 'MyLendy':
-              label = '마이 렌디';
+              iconName = 'user';
               break;
             default:
-              label = '';
+              iconName = 'circle';
           }
+
+          const iconColor = focused ? themeColors.primary : themeColors.mutedText;
 
           return (
             <View style={styles.iconWrapper}>
-              <Text style={[styles.iconText, focused && styles.iconTextFocused]}>{label[0]}</Text>
+              <Icon name={iconName} size={24} color={iconColor} />
             </View>
           );
         },
@@ -80,42 +136,31 @@ export const MainTabNavigator: React.FC = () => {
           route.name === 'Home'
             ? '홈'
             : route.name === 'Search'
-            ? '검색'
-            : route.name === 'Chat'
-            ? '대화'
-            : route.name === 'MyLendy'
-            ? '마이 렌디'
-            : '',
+              ? '검색'
+              : route.name === 'Chat'
+                ? '대화'
+                : route.name === 'MyLendy'
+                  ? '마이렌디'
+                  : '',
+        tabBarButton: props => <HapticTabBarButton {...props} />,
       })}>
       <Tab.Screen name="Home" component={HomeTabScreen} />
       <Tab.Screen name="Search" component={SearchTabScreen} />
-      <Tab.Screen name="Create" component={CreateTabScreen} options={{title: ''}} />
+      <Tab.Screen name="Create" component={CreateTabScreen} options={{ title: '' }} />
       <Tab.Screen name="Chat" component={ChatTabScreen} />
-      <Tab.Screen name="MyLendy" component={MyLendyTabScreen} options={{title: '마이 렌디'}} />
+      <Tab.Screen name="MyLendy" component={MyLendyTabScreen} options={{ title: '마이 렌디' }} />
     </Tab.Navigator>
   );
 };
 
 const styles = StyleSheet.create({
-  tabBar: {
-    height: 72,
-    paddingBottom: 10,
-    paddingTop: 10,
-  },
   tabLabel: {
-    fontSize: 11,
+    fontSize: 12,
+    marginTop: 8,
   },
   iconWrapper: {
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  iconText: {
-    fontSize: 16,
-    color: '#4B5563',
-  },
-  iconTextFocused: {
-    color: '#111827',
-    fontWeight: '600',
   },
   centerButtonWrapper: {
     position: 'absolute',
@@ -129,12 +174,10 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#0F3C5D',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.18,
-    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.5,
+    shadowOffset: { width: 0, height: 4 },
     shadowRadius: 8,
     elevation: 4,
   },
@@ -143,7 +186,7 @@ const styles = StyleSheet.create({
   },
   centerButtonText: {
     color: '#FFFFFF',
-    fontSize: 28,
+    fontSize: 40,
     fontWeight: '600',
     marginTop: -2,
   },

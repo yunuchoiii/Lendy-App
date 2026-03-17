@@ -1,12 +1,12 @@
 import React from 'react';
-import {StyleSheet, View, ActivityIndicator} from 'react-native';
-import {WebView} from 'react-native-webview';
+import { StyleSheet, View } from 'react-native';
+import { WebView } from 'react-native-webview';
 
 type Props = {
   initialUrl?: string;
 };
 
-export const MainWebViewScreen: React.FC<Props> = ({initialUrl}) => {
+export const MainWebViewScreen: React.FC<Props> = ({ initialUrl }) => {
   const uri =
     initialUrl ??
     // TODO: Lendy-Webview 배포/로컬 주소로 교체
@@ -15,13 +15,8 @@ export const MainWebViewScreen: React.FC<Props> = ({initialUrl}) => {
   return (
     <View style={styles.container}>
       <WebView
-        source={{uri}}
+        source={{ uri }}
         startInLoadingState
-        renderLoading={() => (
-          <View style={styles.loading}>
-            <ActivityIndicator size="large" />
-          </View>
-        )}
       />
     </View>
   );
