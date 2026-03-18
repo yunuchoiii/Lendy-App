@@ -40,23 +40,23 @@ const HapticTabBarButton: React.FC<BottomTabBarButtonProps> = ({
 };
 
 const HomeTabScreen = () => (
-  <MainWebViewScreen initialUrl="https://lendy-webview.local/home" />
+  <MainWebViewScreen initialUrl="http://192.168.219.107:3000/home" />
 );
 
 const SearchTabScreen = () => (
-  <MainWebViewScreen initialUrl="https://lendy-webview.local/search" />
+  <MainWebViewScreen initialUrl="http://192.168.219.107:3000/search" />
 );
 
 const CreateTabScreen = () => (
-  <MainWebViewScreen initialUrl="https://lendy-webview.local/create" />
+  <MainWebViewScreen initialUrl="http://192.168.219.107:3000/create" />
 );
 
 const ChatTabScreen = () => (
-  <MainWebViewScreen initialUrl="https://lendy-webview.local/chat" />
+  <MainWebViewScreen initialUrl="http://192.168.219.107:3000/chat" />
 );
 
 const MyLendyTabScreen = () => (
-  <MainWebViewScreen initialUrl="https://lendy-webview.local/mylendy" />
+  <MainWebViewScreen initialUrl="http://192.168.219.107:3000/mylendy" />
 );
 
 export const MainTabNavigator: React.FC = () => {
@@ -73,7 +73,7 @@ export const MainTabNavigator: React.FC = () => {
           {
             backgroundColor: themeColors.background,
             borderTopColor: themeColors.background,
-            height: insets.bottom + 78,
+            height: insets.bottom + 68,
             paddingTop: 5,
             paddingBottom: insets.bottom + 10,
             paddingHorizontal: 10,
